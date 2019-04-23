@@ -52,6 +52,11 @@ const tickets  = [
 ]
 
 app.get('/', (req, res) => res.send('Getting into ticket webpage'));
-
+app.get('/rest/list/', (req, res) => res.send(tickets));
+app.get('/rest/list/:id', (req, res) => {
+    const ticket = tickets.find(c => c.id === parseInt(req.params.id))
+    if(!ticket) res.status(404).send("ticket not found")
+    res.send(ticket)
+});
 
 app.listen(process.env.PORT || port, () => console.log(`App listening on port ${port}!`));
