@@ -1,3 +1,4 @@
+/*
 const express = require('express');
 const app = express();
 app.use(express.json());
@@ -58,5 +59,38 @@ app.get('/rest/list/:id', (req, res) => {
     if(!ticket) res.status(404).send("ticket not found")
     res.send(ticket)
 });
+
+app.listen(process.env.PORT || port, () => console.log(`App listening on port ${port}!`));*/
+
+const express = require('express');
+const MongoClient = require('mongodb').MongoClient;
+var db= null;
+var dbset= require ('mongodb');
+const ObjectID= dbset.ObjectID;
+var app = new express();
+app.use(express.json());
+const port= 2000
+var Tickets="ticket";
+
+function handleError (res, message, displayMessage){
+    res.status(400).send({
+        messsage:displayMessage
+    })
+}
+
+dbset.MongoClient.connect("mongodb+srv://admin:meet26060@cluster0-cog0u.mongodb.net/test?retryWrites=true", {useNewUrlParser: true}, function(e,d){
+    if (e) {
+        console.log(e);
+        console.log("cannot connect to database");
+    }
+    else{
+        db=d.db('RWRProject');
+        console.log("successfully connected to database");
+
+    }
+});
+
+
+
 
 app.listen(process.env.PORT || port, () => console.log(`App listening on port ${port}!`));
