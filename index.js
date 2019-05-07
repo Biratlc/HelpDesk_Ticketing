@@ -1,66 +1,4 @@
-/*
-const express = require('express');
-const app = express();
-app.use(express.json());
-const port = 1000
-const tickets  = [
-    {
-        "id": 1,
-        "created_at": "2015-07-20T22:55:29Z",
-        "updated_at": "2016-05-05T10:38:52Z",
-        "type": "incident",
-        "subject": "MFP not working right",
-        "description": "PC Load Letter? What does that even mean???",
-        "priority": "med",
-        "status": "open",
-        "recipient": "support_example@selu.edu",
-        "submitter": "Michael_bolton@selu.edu",
-        "assignee_id": 235323,
-        "follower_ids": [235323, 234],
-        "tags": ["enterprise", "printers"],
-    },
-    {
-        "id": 2,
-        "created_at": "2015-07-20T22:55:29Z",
-        "updated_at": "2016-05-05T10:38:52Z",
-        "type": "incident",
-        "subject": "MFP not working right",
-        "description": "PC Load Letter? What does that even mean???",
-        "priority": "med",
-        "status": "open",
-        "recipient": "support_example@selu.edu",
-        "submitter": "Michael_bolton@selu.edu",
-        "assignee_id": 235323,
-        "follower_ids": [235323, 234],
-        "tags": ["enterprise", "printers"],
-    },
-    {
-        "id": 3,
-        "created_at": "2015-07-20T22:55:29Z",
-        "updated_at": "2016-05-05T10:38:52Z",
-        "type": "incident",
-        "subject": "MFP not working right",
-        "description": "PC Load Letter? What does that even mean???",
-        "priority": "med",
-        "status": "open",
-        "recipient": "support_example@selu.edu",
-        "submitter": "Michael_bolton@selu.edu",
-        "assignee_id": 235323,
-        "follower_ids": [235323, 234],
-        "tags": ["enterprise", "printers"],
-    },
 
-]
-
-app.get('/', (req, res) => res.send('Getting into ticket webpage'));
-app.get('/rest/list/', (req, res) => res.send(tickets));
-app.get('/rest/list/:id', (req, res) => {
-    const ticket = tickets.find(c => c.id === parseInt(req.params.id))
-    if(!ticket) res.status(404).send("ticket not found")
-    res.send(ticket)
-});
-
-app.listen(process.env.PORT || port, () => console.log(`App listening on port ${port}!`));*/
 
 const express = require('express');
 const MongoClient = require('mongodb').MongoClient;
@@ -89,6 +27,98 @@ dbset.MongoClient.connect("mongodb+srv://admin:meet26060@cluster0-cog0u.mongodb.
 
     }
 });
+
+
+
+app.get('/', (req,res)=>
+    {
+        res.send('Movie ticket is here');
+    }
+)
+
+
+app.get("/rest/list/", function(req, res) {
+    db.collection(Tickets)
+        .find({})
+        .toArray(function(err, docs) {
+            if (err) {
+                handleError(res, err.message, "Failed to get tickets.");
+            } else {
+                res.status(200).json(docs);
+            }
+        });
+});
+app.get("/rest/ticket/:id", function(req, res) {
+
+    db.collection(Tickets).findOne(
+        { _id: new ObjectID(req.params.id)
+
+        },
+        function(err, doc) {
+            if (err) {
+                handleError(res, err.message, "Failed to get a ticket");
+            } else {
+                res.status(200).json(doc);
+            }
+        }
+    );
+});
+app.post("/rest/ticket/", function(req, res) {
+    var newTicket = req.body;
+    if (!req.body.assignee_id||!req.body.follower_ids)
+    {
+        handleError(res, "Invalid user input", "Must provide assignee id and follower's id.", 400);
+    } else {
+        db.collection(Tickets).insertOne(newTicket, function(err, doc) {
+            if (err) {
+                handleError(res, err.message, "Failed to create new ticket.");
+            } else {
+                res.status(201).json(doc.ops[0]);
+            }
+        });
+    }
+});
+//update the ticket in database
+app.put("/rest/ticket/:id", function(req, res) {
+    var updateDoc = req.body;
+    delete updateDoc._id;
+
+    db.collection(Tickets).updateOne(
+        { _id: new ObjectID(req.params.id) },
+        { $set: updateDoc },
+        { upsert: false },
+        function(err, doc) {
+            if (err) {
+                handleError(res, err.message, "Failed to update ticket");
+            } else {
+                updateDoc._id = req.params.id;
+                updateDoc.createDate = new Date();
+                res.status(200).json(updateDoc);
+            }
+        }
+    );
+});
+// //delete the ticket in database
+//     app.delete("/rest/ticket/:id", (req, res) => {
+//         db.collection(Tickets).findOneAndDelete(
+//             { "_id.$oid": req.params.id },
+//             (err, result) => {
+//                 if (err) return res.send(500, err);
+//                 res.send({ message: "ticket got deleted" });
+//             }
+//         );
+//     });
+app.delete("/rest/ticket/:id", function(req, res) {
+    db.collection(Tickets).deleteOne({_id: new ObjectID(req.params.id)}, function(err, result) {
+        if (err) {
+            handleError(res, err.message, "Failed to delete contact");
+        } else {
+            res.status(200).json(req.params.id +"this id got deleted");
+        }
+    });
+});
+
+
 
 
 
